@@ -125,7 +125,7 @@ class _RegisterState extends State<Register> {
                                     return "Password must a lowercase alphabet";
                                   }
                                   if (!value.contains(
-                                      RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
+                                      RegExp(r'[!@#$%^&*(),.?":{}|<>_+-=]'))) {
                                     return "Password must have a special character";
                                   }
 
