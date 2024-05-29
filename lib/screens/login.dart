@@ -1,7 +1,13 @@
+import 'package:email_validator/email_validator.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:ur_fine/services/database_services.dart';
 import 'package:ur_fine/services/routes.dart';
+import 'package:ur_fine/services/show_snack_bar.dart';
+
+import '../services/user_details_provider.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -12,9 +18,14 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   final _formKey = GlobalKey<FormState>();
+
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
   bool isPasswordVisible = false;
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserDetailsProvider>(context);
+
     return Scaffold(
         backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
         body: Center(
@@ -40,30 +51,16 @@ class _LoginState extends State<Login> {
                             children: [
                               TextFormField(
                                 inputFormatters: [
-                                  FilteringTextInputFormatter.deny(
-                                      RegExp(r'[!@#$%^&*(),.?":{}|<>]'))
+                                  FilteringTextInputFormatter.deny(" ")
                                 ],
+                                controller: emailController,
                                 decoration: const InputDecoration(
-                                  icon: Icon(Icons.person),
-                                  hintText: 'Enter your name',
-                                  labelText: 'Name',
+                                  icon: Icon(Icons.email),
+                                  hintText: 'Enter your email',
+                                  labelText: 'Email',
                                 ),
-                                onSaved: (String? value) {
-                                  // This optional block of code can be used to run
-                                  // code when the user saves the form.
-                                },
                                 validator: (String? value) {
-                                  // User name checks to be made
-                                  return (value == null || value == ""
-                                      ? "Name can't be empty"
-                                      : value[0] == "_" ||
-                                              (value.startsWith("_") ||
-                                                  value.startsWith(
-                                                      RegExp(r'[1234567890]')))
-                                          ? "Name must start with a alphabet"
-                                          : value.length < 3
-                                              ? "User name should have at least 3 characters"
-                                              : null);
+                                  return (value==null || value==""? "Email is required": EmailValidator.validate(value) ? null: "Invalid email!!");
                                 },
                               ),
                               const SizedBox(height: 40),
@@ -72,6 +69,7 @@ class _LoginState extends State<Login> {
                                   FilteringTextInputFormatter.deny(
                                       RegExp(r'[ ]'))
                                 ],
+                                controller: passwordController,
                                 decoration: InputDecoration(
                                   icon: const Icon(Icons.lock),
                                   hintText: 'Enter password',
@@ -121,6 +119,9 @@ class _LoginState extends State<Login> {
                               Align(
                                 alignment: Alignment.bottomRight,
                                 child: InkWell(
+                                  onTap: (){
+                                    Navigator.pushNamed(context, RouteGenerator.resetPassword);
+                                  },
                                   child: Text(
                                     "Forgot Password?",
                                     style: Theme.of(context)
@@ -135,8 +136,23 @@ class _LoginState extends State<Login> {
                                 width: double.maxFinite,
                                 child: ElevatedButton(
                                     onPressed: () {
+
                                       if (_formKey.currentState!.validate()) {
-                                        Navigator.pushReplacementNamed(context, RouteGenerator.dashboard);
+                                        FocusManager.instance.primaryFocus?.unfocus();
+
+                                        DatabaseServices().checkIfUserExists(emailController.text, passwordController.text).then((value){
+                                          if(value.$1 == 200){
+                                            userProvider.setUserUsingUid(value.$2!);
+                                            ShowSnackBar.showSnackBar(context, "User login Successful");
+
+                                            Navigator.pushReplacementNamed(
+                                                context, RouteGenerator.dashboard);
+                                          }
+                                          else {
+                                            ShowSnackBar.showSnackBar(context, "Invalid Credentials",color: Colors.red);
+                                          }
+                                        });
+
                                       }
                                     },
                                     child: Text(
@@ -161,18 +177,20 @@ class _LoginState extends State<Login> {
                                         ?.copyWith(color: Colors.black),
                                     children: [
                                       TextSpan(
-                                          text: "Register",
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium
-                                              ?.copyWith(
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .primary,
-                                                  fontWeight: FontWeight.bold),
-                                        recognizer: TapGestureRecognizer()..onTap = (){
-                                            Navigator.pushNamed(context, RouteGenerator.register);
-                                        },
+                                        text: "Register",
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary,
+                                                fontWeight: FontWeight.bold),
+                                        recognizer: TapGestureRecognizer()
+                                          ..onTap = () {
+                                            Navigator.pushNamed(context,
+                                                RouteGenerator.register);
+                                          },
                                       )
                                     ]),
                               ),

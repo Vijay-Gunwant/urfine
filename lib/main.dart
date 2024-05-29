@@ -4,8 +4,14 @@ import 'package:provider/provider.dart';
 import 'package:ur_fine/screens/splash_screen.dart';
 import 'package:ur_fine/services/routes.dart';
 import 'package:ur_fine/services/theme_provider.dart';
-
-void main() {
+import 'package:firebase_core/firebase_core.dart';
+import 'package:ur_fine/services/user_details_provider.dart';
+import 'firebase_options.dart';
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
 }
 
@@ -18,6 +24,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
         providers:  [
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
+          ChangeNotifierProvider(create: (_) => UserDetailsProvider()),
         ],
         builder: (context, child) {
           return Consumer<ThemeProvider>(

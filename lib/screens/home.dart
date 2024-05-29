@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../services/routes.dart';
+import '../services/user_details_provider.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserDetailsProvider>(context);
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.primaryContainer,
       body: SafeArea(
@@ -14,7 +18,7 @@ class Home extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text("Greetings Anshika!!!",style: Theme.of(context).textTheme.headlineLarge,),
+            Text("Greetings ${userProvider.currentUser!.name?.split(' ')[0]}!",style: Theme.of(context).textTheme.headlineLarge,),
             const SizedBox(height: 40,),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,

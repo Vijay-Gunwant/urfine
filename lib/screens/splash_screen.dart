@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ur_fine/services/routes.dart';
 
@@ -38,10 +39,23 @@ class _SplashScreenState extends State<SplashScreen>
       }
     });
 
-    Future.delayed(const Duration(seconds: 4),(){
-      Navigator.pushNamed(context, RouteGenerator.login);
-    });
+    _checkLogin();
     super.initState();
+  }
+  _checkLogin() {
+    FirebaseAuth.instance.authStateChanges().listen((User? user) async {
+      if (user == null) {
+        Future.delayed(const Duration(seconds: 4), () {
+          Navigator.pushReplacementNamed(context, RouteGenerator.login);
+        });
+      } else {
+        Future.delayed(const Duration(seconds: 4), () {
+          Navigator.pushNamedAndRemoveUntil(
+              context, RouteGenerator.dashboard, ((route) => false),
+              arguments: user.uid);
+        });
+      }
+    });
   }
 
   @override

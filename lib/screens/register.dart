@@ -2,7 +2,12 @@ import 'package:email_validator/email_validator.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:ur_fine/services/database_services.dart';
 import 'package:ur_fine/services/routes.dart';
+import 'package:ur_fine/services/show_snack_bar.dart';
+import 'package:ur_fine/services/user_details_provider.dart';
+import 'package:ur_fine/services/user_model.dart';
 
 class Register extends StatefulWidget {
   const Register({super.key});
@@ -14,8 +19,13 @@ class Register extends StatefulWidget {
 class _RegisterState extends State<Register> {
   final _formKey = GlobalKey<FormState>();
   bool isPasswordVisible = false;
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final nameController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserDetailsProvider>(context);
     return Scaffold(
         backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
         body: Center(
@@ -43,6 +53,7 @@ class _RegisterState extends State<Register> {
                                 inputFormatters: [
                                   FilteringTextInputFormatter.deny(" ")
                                 ],
+                                controller: emailController,
                                 decoration: const InputDecoration(
                                   icon: Icon(Icons.email),
                                   hintText: 'Enter your email',
@@ -58,6 +69,7 @@ class _RegisterState extends State<Register> {
                                   FilteringTextInputFormatter.deny(
                                       RegExp(r'[!@#$%^&*(),.?":{}|<>]'))
                                 ],
+                                controller: nameController,
                                 decoration: const InputDecoration(
                                   icon: Icon(Icons.person),
                                   hintText: 'Enter your name',
@@ -87,6 +99,7 @@ class _RegisterState extends State<Register> {
                                   FilteringTextInputFormatter.deny(
                                       RegExp(r'[ ]'))
                                 ],
+                                controller: passwordController,
                                 decoration: InputDecoration(
                                   icon: const Icon(Icons.lock),
                                   hintText: 'Enter password',
@@ -137,11 +150,32 @@ class _RegisterState extends State<Register> {
                                 width: double.maxFinite,
                                 child: ElevatedButton(
                                     onPressed: () {
+
                                       if (_formKey.currentState!.validate()) {
-                                        if (_formKey.currentState!.validate()) {
-                                          Navigator.pushReplacementNamed(context, RouteGenerator.dashboard);
+                                        FocusManager.instance.primaryFocus?.unfocus();
+
+                                        DatabaseServices().createUser(nameController.text, emailController.text, passwordController.text).then((value){
+                                            if(value.$1 ==200){
+                                              ShowSnackBar.showSnackBar(context, "User Created successfully");
+                                              userProvider.setUserUsingUid(value.$2!);
+                                              Navigator.pushReplacementNamed(context, RouteGenerator.dashboard);
+                                            }
+                                            else if(value.$1==404){
+                                              ShowSnackBar.showSnackBar(context, "Server Error occurred",color: Colors.red);
+                                            }
+                                            else if(value.$1 == 409){
+                                              ShowSnackBar.showSnackBar(context, "User Already exists",color: Colors.red);
+                                            }
+                                            else if(value.$1 == 401){
+                                              ShowSnackBar.showSnackBar(context, "Weak Password",color: Colors.red);
+                                            }
+                                            else{
+                                              ShowSnackBar.showSnackBar(context, "Some error occurred",color: Colors.red);
+                                            }
+                                          });
+
+
                                         }
-                                      }
                                     },
                                     child: Text(
                                       "Register",

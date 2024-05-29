@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 
 class ShowSnackBar{
-  static void showSnackBar(BuildContext context,String message){
+  static void showSnackBar(BuildContext context,String message,{Color color = Colors.green}){
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    const snackBar = SnackBar(
-      content: Text('Working on It'),
+     final snackBar = SnackBar(
+      content:  Text(message),
       elevation: 10,
       behavior: SnackBarBehavior.floating,
-      margin: EdgeInsets.all(5),
+      margin: const EdgeInsets.all(5),
+      backgroundColor: color,
     );
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
 
